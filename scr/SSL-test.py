@@ -47,14 +47,15 @@ def fetch_tweets():
     if not BEARER_TOKEN:
         raise SystemExit('Set TWITTER_BEARER_TOKEN environment variable')
     
+    # Import query configuration
+    from twitter_query import TWITTER_QUERY, QUERY_PARAMS, MIN_RETWEETS, MIN_LIKES
+    
     # Configuration
     HEADERS = {'Authorization': f'Bearer {BEARER_TOKEN}'}
-    QUERY = '("AI research" OR "AI deep research" OR "generative AI" OR "AI product" OR "AI feature") lang:en -is:retweet'
     
     PARAMS = {
-        'query': QUERY,
-        'max_results': 10,  # Increased for better results
-        'tweet.fields': 'public_metrics,created_at,author_id'
+        'query': TWITTER_QUERY,
+        **QUERY_PARAMS
     }
     
     url = 'https://api.twitter.com/2/tweets/search/recent'
@@ -70,20 +71,27 @@ def fetch_tweets():
         print(f"Response status: {resp.status_code}")
         js = resp.json()
         
-        # Process tweets
+        # Process tweets with engagement filtering
         rows = []
         for tw in js.get('data', []):
             metrics = tw.get('public_metrics', {})
-            rows.append({
-                'id': tw.get('id'),
-                'created_at': tw.get('created_at'),
-                'author_id': tw.get('author_id'),
-                'text': tw.get('text', '').replace('\n', ' '),
-                'retweets': metrics.get('retweet_count', 0),
-                'likes': metrics.get('like_count', 0),
-                'replies': metrics.get('reply_count', 0),
-                'quotes': metrics.get('quote_count', 0)
-            })
+            retweets = metrics.get('retweet_count', 0)
+            likes = metrics.get('like_count', 0)
+            
+            # Filter by engagement thresholds
+            if retweets >= MIN_RETWEETS or likes >= MIN_LIKES:
+                rows.append({
+                    'id': tw.get('id'),
+                    'created_at': tw.get('created_at'),
+                    'author_id': tw.get('author_id'),
+                    'text': tw.get('text', '').replace('\n', ' '),
+                    'retweets': retweets,
+                    'likes': likes,
+                    'replies': metrics.get('reply_count', 0),
+                    'quotes': metrics.get('quote_count', 0)
+                })
+        
+        print(f"Found {len(js.get('data', []))} tweets, {len(rows)} meet engagement criteria (RT≥{MIN_RETWEETS} OR Likes≥{MIN_LIKES})")
         
         # Save results
         df = pd.DataFrame(rows)
@@ -97,9 +105,9 @@ def fetch_tweets():
             print(f'Saved {len(df)} tweets to data/trending_ai_research_tweets.csv')
             
             # Display top tweets
-            print("\nTop tweets by engagement:")
-            for idx, row in df.head(3).iterrows():
-                print(f"- {row['text'][:100]}... (Likes: {row['likes']}, RTs: {row['retweets']})")
+            print(f"\nHigh-engagement tweets (RT≥{MIN_RETWEETS} OR Likes≥{MIN_LIKES}):")
+            for idx, row in df.head(5).iterrows():
+                print(f"- RT:{row['retweets']} L:{row['likes']} | {row['text'][:80]}...")
         else:
             print('No tweets found.')
             
@@ -123,13 +131,14 @@ def fetch_tweets_alternative():
     session = requests.Session()
     session.verify = certifi.where()
     
+    from twitter_query import TWITTER_QUERY
+    
     BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN')
     HEADERS = {'Authorization': f'Bearer {BEARER_TOKEN}'}
-    QUERY = '("AI research" OR "generative AI") lang:en -is:retweet'
     
     PARAMS = {
-        'query': QUERY,
-        'max_results': 5,
+        'query': TWITTER_QUERY,
+        'max_results': 2,
         'tweet.fields': 'public_metrics,created_at,author_id'
     }
     
