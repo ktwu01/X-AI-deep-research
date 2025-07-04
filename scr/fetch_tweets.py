@@ -11,7 +11,7 @@ QUERY = '("AI research" OR "AI deep research" OR "generative AI" OR "AI product"
 
 PARAMS = {
     'query': QUERY,
-    'max_results': 100,
+    'max_results': 1,
     'tweet.fields': 'public_metrics,created_at,author_id'
 }
 
@@ -37,6 +37,6 @@ df = pd.DataFrame(rows)
 if not df.empty:
     df.sort_values(['retweets', 'likes'], ascending=False, inplace=True)
     df.to_csv('data/trending_ai_research_tweets.csv', index=False)
-    print('Saved', len(df), 'tweets to data/trending_ai_research_tweets.csv')
+    print('Saved', len(df), 'tweets2data/trending_ai_research_tweets.csv')
 else:
     print('No tweets found.')
