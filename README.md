@@ -12,6 +12,11 @@ engagement metrics and written to a CSV file.
 2. Set the environment variable `TWITTER_BEARER_TOKEN` with your token.
 3. Run the script:
 
+```
+source my_venv/bin/activate
+pip install -r requirements.txt
+```
+
 ```bash
 python scripts/fetch_tweets.py
 ```
