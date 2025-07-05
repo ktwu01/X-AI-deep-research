@@ -1,3 +1,0 @@
-id,created_at,author_id,text,retweets,likes,replies,quotes
-1234567890123456789,2025-07-03T12:00:00.000Z,1111111,"Check out this new AI research tool that generates code automatically!",1500,3400,200,50
-9876543210987654321,2025-07-02T08:30:00.000Z,2222222,"DeepMind releases paper on RL-based AI system outperforming humans",1200,2900,180,40
